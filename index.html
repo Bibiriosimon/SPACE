@@ -1,0 +1,151 @@
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPACE</title>
+</head>
+<body>
+
+<!-- 主应用容器 -->
+<div id="app">
+
+    <!-- 1. 登录/注册视图 (应用加载时默认显示) -->
+    <div id="auth-view" class="view active">
+        <div class="auth-container">
+            <h1>SPACE</h1>
+            <!-- 登录表单 -->
+            <form id="login-form">
+                <h2>登录</h2>
+                <input type="text" id="login-username" placeholder="用户名" required>
+                <input type="password" id="login-password" placeholder="密码" required>
+                <button type="submit">进入 SPACE</button>
+                <p id="login-error" class="error-message"></p>
+            </form>
+            <!-- 注册表单 (默认隐藏) -->
+            <form id="register-form" style="display:none;">
+                <h2>注册</h2>
+                <input type="text" id="register-username" placeholder="设置用户名" required>
+                <input type="password" id="register-password" placeholder="设置密码" required>
+                <button type="submit">立即注册</button>
+                <p id="register-error" class="error-message"></p>
+            </form>
+            <p class="switch-form">
+                <a href="#" id="show-register">还没有账户？点此注册</a>
+                <a href="#" id="show-login" style="display:none;">已有账户？点此登录</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- 2. 主页视图 (登录后显示) -->
+    <div id="main-view" class="view">
+       <div class="header">
+           <span id="current-username-display"></span>
+           <button id="logout-btn">退出</button>
+       </div>
+       <h1>欢迎来到 SPACE</h1>
+       <div class="main-menu">
+           <button id="goto-plaza-btn">Plaza</button>
+           <button id="goto-chat-btn">Chat</button>
+       </div>
+    </div>
+    
+    <!-- 3. Plaza 广场视图 -->
+    <div id="plaza-view" class="view">
+        <div class="header">
+            <!-- data-target 属性告诉JS返回到哪个视图 -->
+            <button class="back-btn" data-target="main-view">BACK</button>
+            <h2>Plaza</h2>
+            <button id="show-publish-modal-btn">Publish</button>
+        </div>
+        <div id="plaza-topics-list" class="content-list">
+            <!-- 帖子列表将由JS动态填充到这里 -->
+            <p>正在加载帖子...</p>
+        </div>
+    </div>
+
+    <!-- 我们未来的Chat视图会放在这里 -->
+    <!-- <div id="chat-view" class="view"> ... </div> -->
+<!-- 5. 帖子详情视图 (新添加) -->
+<div id="topic-detail-view" class="view">
+    <div class="header">
+        <!-- 这个BACK按钮比较特殊，它需要返回到Plaza主页 -->
+        <button class="back-btn" data-target="plaza-view">BACK</button>
+        <h2>话题详情</h2>
+    </div>
+
+    <!-- 帖子主体内容 -->
+    <div id="topic-detail-content" class="topic-detail-card">
+        <!-- 帖子详情将由JS填充到这里 -->
+    </div>
+
+    <!-- 评论列表 -->
+    <h3 class="comments-header">评论区</h3>
+    <div id="comments-list" class="content-list">
+        <!-- 评论列表将由JS填充到这里 -->
+    </div>
+
+    <!-- 发表评论的表单 -->
+    <form id="comment-form" class="comment-form">
+        <textarea id="comment-input" placeholder="发表你的看法..." required></textarea>
+        <button type="submit">发送</button>
+    </form>
+</div>
+<!-- 6. Chat 用户列表视图 -->
+<div id="chat-list-view" class="view">
+    <div class="header">
+        <button class="back-btn" data-target="main-view">BACK</button>
+        <h2>Chat</h2>
+    </div>
+    <div id="chat-user-list" class="content-list">
+        <!-- 用户列表将由JS动态填充 -->
+    </div>
+</div>
+
+<!-- 7. 一对一聊天窗口视图 -->
+<div id="chat-window-view" class="view">
+    <div class="header">
+        <button class="back-btn" data-target="chat-list-view">BACK</button>
+        <h2 id="chat-partner-name">与...聊天中</h2>
+    </div>
+    <div id="chat-messages-container" class="content-list">
+        <!-- 聊天消息将由JS动态填充 -->
+    </div>
+    <form id="chat-message-form" class="comment-form">
+        <textarea id="chat-message-input" placeholder="输入消息..." required></textarea>
+        <button type="submit">发送</button>
+    </form>
+</div>
+
+    <!-- 4. 发布帖子的弹窗 (默认隐藏) -->
+    <div id="publish-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>发布新话题</h3>
+            <form id="publish-form">
+                <input type="text" id="publish-title" placeholder="帖子标题" required>
+                <textarea id="publish-content" placeholder="分享你的想法..." rows="6" required></textarea>
+                <input type="text" id="publish-image-url" placeholder="图片链接 (可选)">
+                <div class="modal-actions">
+                    <button type="button" id="cancel-publish-btn">取消</button>
+                    <button type="submit">Go</button>
+                </div>
+                <p id="publish-error" class="error-message"></p>
+            </form>
+        </div>
+    </div>
+
+</div> <!-- /#app -->
+<!-- 【【【第一处新增：头像选择弹窗的HTML结构】】】 -->
+<div id="avatar-modal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 id="avatar-modal-title">Choose Your Avatar!</h3>
+        <div id="avatar-choices-container" class="avatar-grid">
+            <!-- 头像图片将由JS动态填充到这里 -->
+            <p>Loading avatars...</p>
+        </div>
+        <p id="avatar-modal-message" class="info-message"></p>
+    </div>
+</div>
+
+</body>
+  
+</html>

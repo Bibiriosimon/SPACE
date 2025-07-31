@@ -1,0 +1,735 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+
+/* ======================================================= */
+/* ==           【新增】CSS 变量 (主题化)                == */
+/* ======================================================= */
+:root {
+    /* 颜色变量 */
+    --bg-dark-deep: #16213e;
+    --bg-dark-med: #1a1a2e;
+    --bg-dark-light: #3a3a5e;
+    --text-primary: #e0e0e0;
+    --text-secondary: #8a8a9e;
+    --accent-cyan: #00ffff;
+    --accent-blue: #5372f0;
+
+    /* 尺寸和间距变量 */
+    --padding-base: 20px;
+    --border-radius-base: 15px;
+    --font-size-base: 16px;
+}
+
+/* --- 1. 基础设置 --- */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Noto Sans SC', sans-serif;
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    
+    /* body 负责居中 #app */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* --- 2. #app 主容器 --- */
+/* --- #app 主容器样式 --- */
+#app {
+    /* 
+      【【【宽度修改】】】
+      将 max-width 调整为一个更适合桌面的值。
+      600px 是一个不错的开始，你可以根据喜好调整为 500px, 700px 等。
+      我们保留 width: 100% 是为了在手机等小屏幕上，它能自适应占满屏幕。
+    */
+    width: 100%;
+    max-width: 600px; /*  <-- 调大这个值 */
+
+    /* 
+      【【【高度修改】】】
+      同样，我们可以给桌面端一个更舒适的高度。
+      85vh 的意思是 “视口高度的85%”。这让它在不同大小的显示器上看起来都很和谐。
+      同时我们保留一个 max-height 以防万一。
+    */
+    height: 85vh; /* <-- 使用 vh 单位 */
+    max-height: 850px; /* <-- 也可以适当调大 */
+
+    background-color: #16213e;
+    border-radius: 15px; /* 可以适当调大一点，比如 20px，配合更大的尺寸 */
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6); /* 阴影也可以更深一点 */
+    
+    /* 下面的核心布局属性保持不变 */
+    display: flex; 
+    flex-direction: column;
+    overflow: hidden; 
+}
+
+
+
+/* ======================================================= */
+/* ==                 第二部分: 视图通用样式              == */
+/* ======================================================= */
+
+.view {
+    flex-grow: 1; /* 让视图填充 #app 的剩余空间 */
+    display: none; /* 默认隐藏 */
+    flex-direction: column; /* 让视图内部也能用flex布局 */
+
+    /* 
+      【【【魔法属性 2】】】
+      这是另一个关键！它解决了flex子项内部的滚动问题。
+      它告诉浏览器，这个视图的最小高度可以是0，允许它被压缩，
+      从而让内部设置了 flex-grow: 1 和 overflow-y: auto 的子元素
+      （比如 #chat-messages-container）能够正确计算高度和滚动。
+    */
+    min-height: 0; 
+
+    /* 
+      【【【重要调整】】】
+      将 padding 从 .view 移到各个视图内部需要滚动的区域，
+      或者在不需要滚动的视图（如main-view）上单独设置。
+      因为 padding 会影响 flex-grow 的计算。
+      如果所有视图都需要padding，可以保留，但chat-window-view需要特殊处理。
+      
+      为了保险起见，我们暂时移除这里的通用padding。
+      你已经在 #chat-window-view 里把它设为0了，这是对的。
+    */
+     /* padding: 20px;  <-- 注释掉或删除这一行 */
+     /* box-sizing: border-box; <-- 这行也一起注释或删除 */
+}
+
+.view.active {
+    display: flex; /* 显示激活的视图 */
+}
+
+/* 
+  为那些没有自己内部padding的简单视图，补上padding。
+  这样就不影响它们原来的布局了。
+*/
+#auth-view, #main-view, #plaza-view, #topic-detail-view, #chat-list-view {
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+
+
+/* --- 登录/注册样式 --- */
+.auth-container {
+    text-align: center;
+    padding-top: 50px;
+}
+.auth-container h1 {
+    color: #00ffff;
+    font-size: 48px;
+    letter-spacing: 5px;
+}
+.auth-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 30px;
+}
+.auth-container input {
+    padding: 12px;
+    border-radius: 5px;
+    border: 1px solid #5372f0;
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    font-size: 16px;
+}
+.auth-container button {
+    padding: 12px;
+    border-radius: 5px;
+    border: none;
+    background-color: #5372f0;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.auth-container button:hover {
+    background-color: #425cc4;
+}
+.switch-form {
+    margin-top: 20px;
+}
+.switch-form a {
+    color: #00ffff;
+    text-decoration: none;
+}
+.error-message {
+    color: #ff4d4d;
+    min-height: 20px;
+}
+
+/* --- 主页视图的简单样式 --- */
+#main-view {
+    text-align: center;
+}
+
+/* --- 通用组件样式 --- */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #3a3a5e;
+    flex-shrink: 0; /* 【新增】防止 Header 在空间不足时被压缩 */
+}
+
+.header h2 {
+    margin: 0;
+    color: #00ffff;
+}
+
+.header button, .main-menu button {
+    background: #5372f0;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.header .back-btn {
+    background: transparent;
+    border: 1px solid #5372f0;
+}
+
+.main-menu {
+    margin-top: 50px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.main-menu button {
+    padding: 20px;
+    font-size: 24px;
+}
+
+
+/* --- Plaza 视图样式 --- */
+/* 【关键修改 5】: 删除通用的 .content-list 样式 */
+/* 因为现在每个列表的布局都由其父视图的 Flexbox 控制 */
+/* 我们将为每个列表单独设置样式 */
+
+/* 【关键修改 6】: 让 Plaza 帖子列表可以滚动 */
+#plaza-topics-list {
+    flex-grow: 1; /* 占据剩余空间 */
+    overflow-y: auto; /* 超出时滚动 */
+    margin-top: 20px;
+}
+
+.topic-card {
+    background-color: #1a1a2e;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border-left: 4px solid #00ffff;
+}
+.topic-card h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+.topic-card p {
+    margin-bottom: 10px;
+    white-space: pre-wrap;
+}
+.topic-meta {
+    font-size: 12px;
+    color: #8a8a9e;
+    text-align: right;
+}
+
+/* --- 弹窗 (Modal) 样式 --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.modal-overlay.active {
+    display: flex;
+}
+.modal-content {
+    background: #16213e;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+}
+.modal-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.modal-content input, .modal-content textarea {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #5372f0;
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    font-size: 14px;
+    resize: vertical;
+}
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+.modal-actions button[type="submit"] {
+    background-color: #5372f0;
+}
+.modal-actions button[type="button"] {
+    background-color: #4a4a68;
+}
+
+/* --- 帖子详情页样式 --- */
+/* 【关键修改 7】: 让评论区列表可以滚动 */
+#comments-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-top: 10px;
+}
+
+.topic-detail-card {
+    background-color: #1a1a2e;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+    flex-shrink: 0; /* 【新增】防止帖子详情在空间不足时被压缩 */
+}
+.topic-detail-card h2 {
+    margin-top: 0;
+    color: #00ffff;
+}
+.topic-detail-card p {
+    font-size: 16px;
+    line-height: 1.6;
+}
+.topic-detail-card .topic-meta {
+    margin-top: 15px;
+}
+
+.comments-header {
+    padding-bottom: 10px;
+    border-bottom: 1px solid #3a3a5e;
+    flex-shrink: 0; /* 【新增】防止评论区标题在空间不足时被压缩 */
+}
+
+/* --- 评论卡片样式 --- */
+.comment-card {
+    display: flex;
+    flex-direction: column;
+    background-color: transparent;
+    padding: 10px 5px;
+    border-bottom: 1px solid #2a2a4e;
+}
+.comment-card p {
+    margin: 0 0 10px 0;
+}
+.comment-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #8a8a9e;
+}
+.like-btn {
+    background-color: #3a3a5e;
+    color: #e0e0e0;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.like-btn:hover {
+    background-color: #5372f0;
+}
+.like-btn .icon {
+    color: #ff4d4d;
+}
+
+/* --- 评论表单样式 --- */
+.comment-form {
+    display: flex;
+    gap: 10px;
+    padding: 10px 0;
+    margin-top: 10px;
+    flex-shrink: 0; /* 【新增】防止评论表单在空间不足时被压缩 */
+}
+.comment-form textarea {
+    flex-grow: 1;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #5372f0;
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    resize: none;
+    height: 40px;
+}
+.comment-form button {
+    background: #5372f0;
+    color: white;
+    border: none;
+    padding: 0 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* --- Chat 用户列表样式 --- */
+/* 【关键修改 8】: 让用户列表可以滚动 */
+#chat-user-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-top: 20px;
+}
+
+.user-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    background-color: #1a1a2e;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+.user-card-info {
+    font-size: 18px;
+    font-weight: bold;
+}
+.user-card-info span {
+    font-size: 12px;
+    color: #8a8a9e;
+    font-weight: normal;
+    margin-left: 10px;
+}
+.user-card-actions {
+    display: flex;
+    gap: 10px;
+}
+.user-card-actions .like-btn {
+    font-size: 12px;
+}
+.chat-kick-btn {
+    background: #00ffff;
+    color: #16213e;
+    font-weight: bold;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* --- 聊天窗口样式 --- */
+/* --- 1. 让聊天视图本身成为一个严格的 Flex 容器 --- */
+#chat-window-view {
+    /* 继承自 .view 的 display: flex 和 flex-direction: column */
+    /* 我们需要移除 padding，因为我们要对内部元素单独控制 */
+    padding: 0;
+}
+
+/* --- 2. 为聊天窗口定义一个固定的头部 --- */
+#chat-window-view .header {
+    flex-shrink: 0; /* 不允许被压缩 */
+    /* 如果你的HTML里header有padding，这里可以调整或移除 */
+    padding: 10px 20px; 
+    border-bottom: 1px solid #3a3a5e;
+}
+
+/* --- 3. 让聊天消息容器可滚动 (最关键的修改) --- */
+#chat-messages-container {
+    flex-grow: 1; /* 【关键】占据所有剩余的垂直空间 */
+    overflow-y: auto; /* 【关键】内容超出时，只在这个容器内部出现垂直滚动条 */
+    padding: 15px; /* 在容器内部设置内边距 */
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* 消息之间的垂直间距 */
+}
+
+/* --- 4. 定义一个固定的底部输入区域 --- */
+#chat-message-form {
+    flex-shrink: 0; /* 不允许被压缩 */
+    display: flex;
+    gap: 10px;
+    padding: 10px 15px;
+    border-top: 1px solid #3a3a5e;
+    background-color: #1e1e3f;
+}
+
+#chat-message-form textarea {
+    flex-grow: 1;
+    /* 你可以沿用你已有的 textarea 样式 */
+    padding: 10px;
+    border-radius: 20px; /* 圆角输入框更好看 */
+    border: 1px solid #3a3a5e;
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    resize: none;
+    min-height: 20px;
+    font-family: inherit;
+    font-size: 16px;
+}
+
+#chat-message-form button {
+    background: #5372f0;
+    color: white;
+    border: none;
+    padding: 0 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* --- 5. 修复消息气泡的布局 --- */
+/* 
+  你原来的CSS把 .message-bubble 当作 Flex 子项来对齐，
+  但我们的JS现在是用 .message-wrapper 包裹它们的。
+  所以我们需要把 align-self 应用到 .message-wrapper 上。
+*/
+.message-wrapper {
+    display: flex;
+    max-width: 80%;
+    gap: 10px;
+    align-items: flex-start; /* 头像和气泡顶部对齐 */
+    animation: slide-in 0.3s ease-out; /* 动画效果 */
+}
+
+.message-wrapper.sent {
+    align-self: flex-end; /* 【关键】让整个包裹靠右 */
+}
+
+.message-wrapper.received {
+    align-self: flex-start; /* 【关键】让整个包裹靠左 */
+}
+
+/* 气泡本身的样式 */
+.message-bubble {
+    padding: 10px 15px;
+    border-radius: 18px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+/* 区分发送和接收的气泡颜色和尖角 */
+.message-wrapper.sent .message-bubble {
+    background-color: #5372f0;
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.message-wrapper.received .message-bubble {
+    background-color: #3a3a5e;
+    color: #e0e0e0;
+    border-bottom-left-radius: 4px;
+}
+/* 【【【第二处新增：头像选择弹窗的CSS样式】】】 */
+
+/* 头像选择弹窗的网格布局 */
+.avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+    max-height: 40vh; /* 限制最大高度，超出可滚动 */
+    overflow-y: auto;
+    padding: 5px;
+}
+
+/* 网格中的单个头像样式 */
+.avatar-choice {
+    width: 100%;
+    height: auto;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.2s ease-in-out;
+}
+
+/* 鼠标悬停和被选中时的效果 */
+.avatar-choice:hover {
+    transform: scale(1.1);
+    border-color: #00ffff; /* 你的主题色 */
+}
+
+.avatar-choice.selected {
+    border-color: #5372f0; /* 另一个主题色 */
+    box-shadow: 0 0 10px #5372f0;
+}
+
+/* 弹窗内的提示信息样式 */
+.info-message {
+    text-align: center;
+    color: #e0e0e0;
+    min-height: 20px;
+}
+.topic-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.topic-header h3 {
+    margin: 0;
+}
+/* ======================================= */
+/* ==      头像尺寸精准控制 (核心修改)     == */
+/* ======================================= */
+
+.avatar {
+    /* 
+      设置固定的宽度和高度。
+      40px 是一个非常经典和通用的头像尺寸。
+      你可以根据你的喜好调整为 35px, 45px 等。
+    */
+    width: 40px;
+    height: 40px;
+
+    /* 
+      保持圆形。
+      border-radius: 50% 是创建完美圆形的关键。
+    */
+    border-radius: 50%; 
+
+    /* 
+      防止图片在被缩小时变形。
+      'cover' 会裁剪图片以适应容器，'contain' 会完整显示图片但可能留白。
+      对于头像，'cover' 通常效果最好。
+    */
+    object-fit: cover; 
+    
+    /* 
+      一个很重要的属性，防止头像在flex布局中被意外压缩。
+      flex-shrink: 0; 告诉浏览器：“无论空间多紧张，都不要缩小我！”
+    */
+    flex-shrink: 0;
+    
+    /* 
+      给一个背景色，在图片还没加载出来时，会显示一个占位的圆形。
+    */
+    background-color: #3a3a5e; 
+}
+/* ======================================= */
+/* ==           字体和颜色美化            == */
+/* ======================================= */
+
+/* 1. 全局用户名字体 */
+.comment-author, 
+.user-card-info,
+.topic-meta span:first-child, /* Plaza帖子元信息里的作者 */
+.topic-detail-content .topic-meta span:first-child { /* 帖子详情里的作者 */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* 使用一种更现代、清晰的无衬线字体 */
+    color: #00ffff; /* 青色，科技感 */
+    font-weight: 600; /* 稍微加粗 */
+}
+
+/* 2. Plaza 帖子正文字体 */
+.topic-card p,
+#topic-detail-content p {
+    font-family: 'Georgia', 'Times New Roman', Times, serif; /* 使用一种优雅的衬线字体，易于阅读 */
+    color: #e0e0e0; /* 柔和的白色 */
+    line-height: 1.6; /* 增加行高，提升阅读舒适度 */
+}
+
+/* 3. Plaza 评论文字体 */
+.comment-card p {
+    font-family: 'Arial', sans-serif; /* 使用一种非常通用的无衬线字体 */
+    color: #cccccc; /* 比帖子正文稍微暗一点的白色，以作区分 */
+    font-size: 0.95em; /* 比正文稍微小一点 */
+}
+
+/* 4. Chat 聊天文字体 */
+.message-bubble {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; /* 使用系统UI字体，感觉更原生 */
+    color: #ffffff; /* 确保聊天文字是纯白色，对比度更高 */
+    font-size: 1em; /* 聊天字体大小设为标准大小 */
+}
+/* ======================================================= */
+/* ==         【【【核心】】】PC端适配 - 媒体查询         == */
+/* ======================================================= */
+
+/* 
+  @media (min-width: 768px) 的意思是：
+  当浏览器窗口的宽度大于或等于 768px 时，
+  应用括号 { ... } 内部的所有样式。
+*/
+@media (min-width: 768px) {
+
+    /* --- 1. 让 #app 容器变宽，并采用左右分栏布局 --- */
+    #app {
+        /* 在PC端，让它更宽，更像一个网站模块 */
+        max-width: 1200px;
+        height: 90vh;
+        max-height: 900px;
+
+        /* 
+          【【【PC布局魔法】】】
+          我们把 #app 从垂直布局变为水平布局 (row)
+        */
+        flex-direction: row; 
+        align-items: stretch; /* 让子项在交叉轴上撑满高度 */
+    }
+
+    /* --- 2. 重新定义 .view 的行为 --- */
+ .view {
+    /* 【关键修改】不再使用 flex-grow，而是给一个固定的宽度 */
+    flex-basis: 400px; /* 每个视图的基础宽度 */
+    flex-shrink: 0;   /* 不允许被压缩 */
+    
+    border-right: 2px solid var(--bg-dark-light);
+}
+.view:last-child {
+    border-right: none;
+}
+
+    /* --- 3. 特殊视图的特殊处理 --- */
+    
+    /* Plaza 和 Chat 用户列表应该占据更多空间 */
+    #plaza-view, #chat-list-view {
+        flex-grow: 1; /* 允许这两个视图“吃掉”更多横向空间 */
+    }
+
+    /* 登录/注册视图和主菜单视图应该在中间，并且有固定宽度 */
+    #auth-view, #main-view {
+        max-width: 450px; /* 给一个最大宽度 */
+        margin: 0 auto; /* 让它在 #app 容器内水平居中 */
+        border-right: none;
+    }
+    
+    /* 详情页和聊天窗口应该并排显示 */
+    /* 默认情况下，所有视图都是隐藏的 */
+    /* 当我们需要并排显示时，JS需要给两个视图同时加上 .active 类 */
+    .view.active {
+        display: flex !important; /* 使用 !important 确保它能覆盖 display: none */
+    }
+
+    /* --- 4. 优化滚动列表的显示 --- */
+    #plaza-topics-list, #comments-list, #chat-user-list, #chat-messages-container {
+        /* 增加一个平滑的滚动条样式（仅在支持的浏览器中生效） */
+        scrollbar-width: thin;
+        scrollbar-color: var(--accent-blue) var(--bg-dark-med);
+    }
+
+
+    /* 让header里的标题居中 */
+/* --- 通用组件样式 --- */
+.header {
+    display: flex;
+    justify-content: space-between; /* 【核心】让子元素两端对齐 */
+    align-items: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--bg-dark-light, #3a3a5e); /* 使用变量，如果变量不存在则用旧颜色 */
+    flex-shrink: 0;
+    width: 100%; /* 确保header撑满其父容器的宽度 */
+}
+
