@@ -4,19 +4,21 @@
 /* ==           【新增】CSS 变量 (主题化)                == */
 /* ======================================================= */
 :root {
-    /* 颜色变量 */
-    --bg-dark-deep: #16213e;
-    --bg-dark-med: #1a1a2e;
-    --bg-dark-light: #3a3a5e;
-    --text-primary: #e0e0e0;
-    --text-secondary: #8a8a9e;
-    --accent-cyan: #00ffff;
-    --accent-blue: #5372f0;
+    /* 颜色变量 - 苹果暗色模式风格 */
+    --bg-deep: #1C1C1E;         /* 最深的背景色，用于body */
+    --bg-medium: #2C2C2E;       /* 卡片、列表项的背景色 */
+    --bg-light-translucent: rgba(58, 58, 60, 0.7); /* 半透明背景，用于Header和输入框 */
+    --text-primary: #F2F2F7;    /* 主要文字颜色 */
+    --text-secondary: #8E8E93;  /* 次要文字颜色 (时间戳、元信息) */
+    --accent-blue: #0A84FF;     /* 交互主色 (按钮、链接) */
+    --accent-red: #FF453A;      /* 危险/错误操作颜色 */
+    --divider-color: #38383A;    /* 分割线颜色 */
 
-    /* 尺寸和间距变量 */
-    --padding-base: 20px;
-    --border-radius-base: 15px;
-    --font-size-base: 16px;
+    /* 字体和尺寸 */
+    --font-family-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --border-radius-large: 20px; /* 大圆角，用于输入框、弹窗 */
+    --border-radius-medium: 12px;/* 中等圆角，用于卡片 */
+    --border-radius-small: 8px;  /* 小圆角 */
 }
 
 /* --- 1. 基础设置 --- */
@@ -24,11 +26,10 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    font-family: 'Noto Sans SC', sans-serif;
-    background-color: #1a1a2e;
-    color: #e0e0e0;
+    font-family: var(--font-family-system); /* 应用系统字体 */
+    background-color: var(--bg-deep);       /* 应用新的背景色 */
+    color: var(--text-primary);             /* 应用新的文字颜色 */
     
-    /* body 负责居中 #app */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -441,10 +442,15 @@ html, body {
 
 /* --- 2. 为聊天窗口定义一个固定的头部 --- */
 #chat-window-view .header {
-    flex-shrink: 0; /* 不允许被压缩 */
-    /* 如果你的HTML里header有padding，这里可以调整或移除 */
+    /* ...你已有的 flex, padding 等样式... */
+    flex-shrink: 0;
     padding: 10px 20px; 
-    border-bottom: 1px solid #3a3a5e;
+    border-bottom: 1px solid var(--divider-color);
+
+    /* 【毛玻璃效果】 */
+    background-color: var(--bg-light-translucent); /* 使用半透明背景 */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px); /* 兼容 Safari */
 }
 
 /* --- 3. 让聊天消息容器可滚动 (最关键的修改) --- */
@@ -459,12 +465,17 @@ html, body {
 
 /* --- 4. 定义一个固定的底部输入区域 --- */
 #chat-message-form {
-    flex-shrink: 0; /* 不允许被压缩 */
+    /* ...你已有的 flex, padding 等样式... */
+    flex-shrink: 0;
     display: flex;
     gap: 10px;
     padding: 10px 15px;
-    border-top: 1px solid #3a3a5e;
-    background-color: #1e1e3f;
+    border-top: 1px solid var(--divider-color);
+
+    /* 【毛玻璃效果】 */
+    background-color: var(--bg-light-translucent);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 }
 
 #chat-message-form textarea {
@@ -733,3 +744,135 @@ html, body {
     width: 100%; /* 确保header撑满其父容器的宽度 */
 }
 
+/* ======================================================= */
+/* ==         【第二步】按钮按压微交互 (全局)             == */
+/* ======================================================= */
+button, 
+.topic-card, /* 让帖子卡片也能点击 */
+.user-card,  /* 用户卡片 */
+.avatar-choice /* 头像选择 */
+{
+    cursor: pointer;
+    /* 定义一个过渡效果，只针对 transform 属性 */
+    transition: transform 0.1s cubic-bezier(0.25, 0.1, 0.25, 1.0);
+}
+
+/* 当鼠标按下时，应用这个效果 */
+button:active,
+.topic-card:active,
+.user-card:active,
+.avatar-choice:active {
+    transform: scale(0.97); /* 缩小一点点 */
+    filter: brightness(0.9); /* 变暗一点点 */
+}
+/* ======================================================= */
+/* ==           【第四步】列表加载的逐项动画              == */
+/* ======================================================= */
+
+/* 定义所有列表项的初始状态和动画属性 */
+.topic-card, .user-card, .comment-card {
+    opacity: 0; /* 默认透明 */
+    transform: translateY(20px); /* 默认在下方20px处 */
+    animation: slide-up-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 定义动画关键帧 (如果上面已经有了就不用重复添加) */
+@keyframes slide-up-fade-in {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+/* ======================================================= */
+/* ==       【核心】iPhone 手机外壳和屏幕样式            == */
+/* ======================================================= */
+
+/* --- 1. 手机外壳 (最外层) --- */
+.iphone-shell {
+    position: relative; /* 作为内部绝对定位元素的参照物 */
+    padding: 12px;      /* 模拟手机金属边框的厚度 */
+    background: #222;   /* 深灰色金属质感 */
+    border-radius: 50px;/* iPhone 的经典大圆角 */
+    box-shadow: 
+        inset 0 0 3px rgba(255, 255, 255, 0.2), /* 内部高光，模拟反光 */
+        0 30px 60px rgba(0, 0, 0, 0.7);        /* 外部深邃的阴影，让手机浮起来 */
+    
+    /* 让外壳尺寸适应内部的 #app 容器 */
+    width: auto;
+    height: auto;
+}
+
+/* --- 2. 屏幕黑边 --- */
+.iphone-bezel {
+    border-radius: 38px; /* 黑边的圆角比外壳小一点 */
+    overflow: hidden;    /* 【关键】把 #app 的直角裁切成圆角 */
+}
+
+/* --- 3. #app 容器的新角色 --- */
+/* 我们需要修改原有的 #app 样式，让它适应作为“屏幕”的新角色 */
+/* 请找到你原来的 #app 样式，并用下面的代码替换它 */
+#app {
+    width: 400px;  /* 【重要】使用固定宽度 */
+    height: 800px; /* 【重要】使用固定高度 (模拟iPhone 13 Pro的比例) */
+    
+    background-color: var(--bg-deep, #1C1C1E); /* 屏幕背景色 */
+    
+    /* 【移除】不再需要圆角和阴影，因为这些由外壳 .iphone-shell 提供 */
+    /* border-radius: 0; */
+    /* box-shadow: none; */
+
+    /* Flex 布局保持不变 */
+    display: flex; 
+    flex-direction: column;
+    overflow: hidden; 
+}
+
+
+/* --- 4. 手机的“刘海” (Notch) --- */
+.iphone-notch {
+    position: absolute; /* 绝对定位于 .iphone-shell 内部 */
+    top: 12px; /* 与外壳的 padding 一致 */
+    left: 50%;
+    transform: translateX(-50%);
+    
+    width: 210px;
+    height: 30px;
+    background: #222; /* 和外壳颜色一样 */
+    border-bottom-left-radius: 18px; /* 刘海的圆角 */
+    border-bottom-right-radius: 18px;
+
+    /* 让刘海里的组件居中 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+/* 刘海里的摄像头和扬声器 */
+.iphone-notch .camera {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #000;
+    border: 1px solid #444;
+}
+
+.iphone-notch .speaker {
+    width: 70px;
+    height: 6px;
+    border-radius: 3px;
+    background: #111;
+}
+
+/* --- 5. 确保 body 能正确居中手机模型 --- */
+/* 修改你已有的 body 样式，确保它能处理这个新模型 */
+body {
+    /* ... 你已有的 font, background-color 等 ... */
+    min-height: 100vh; /* 确保 body 至少有屏幕那么高 */
+    padding: 40px 0;   /* 给上下一些空间 */
+    box-sizing: border-box;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
