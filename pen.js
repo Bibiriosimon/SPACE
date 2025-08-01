@@ -144,40 +144,113 @@ function switchView(viewId) {
 
 
 // 【【【第二处修改：更新登录函数以保存头像URL】】】
+// =======================================================
+// ==      【【【配套修改】】】登录后触发头像选择         ==
+// =======================================================
+// =======================================================
+// ==      【【【最终修正】】】处理扁平的登录响应结构     ==
+// =======================================================
 async function handleLogin(event) {
     event.preventDefault();
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
+    const errorEl = document.getElementById('login-error');
+    errorEl.textContent = '';
     
-    const response = await fetch(`${API_BASE_URL}/api/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-    });
-    const data = await response.json();
-    if (response.ok) {
-        // 保存Token和用户信息
-        localStorage.setItem('spaceToken', data.token);
-        localStorage.setItem('spaceUsername', data.username);
-        localStorage.setItem('spaceUserId', data.user_id);
-        localStorage.setItem('spaceAvatarUrl', data.avatar_url); // 【新增这一行】
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
 
-        checkLoginStatus(); // 使用统一的函数来更新状态和视图
-    } else {
-        alert(data.message);
+        // 【调试】让我们看看登录成功后，后端到底返回了什么
+        console.log('登录成功，后端返回的完整数据：', data);
+
+        if (response.ok) {
+            // 登录成功，现在我们从一个扁平的 data 对象中获取所有信息
+            // 【【【核心修正】】】 不再使用 data.user.xxx，而是直接使用 data.xxx
+            localStorage.setItem('spaceToken', data.token);
+            localStorage.setItem('spaceUsername', data.username);
+            localStorage.setItem('spaceUserId', data.user_id); // 后端返回的是 user_id
+            localStorage.setItem('spaceAvatarUrl', data.avatar_url);
+
+            const DEFAULT_AVATAR = 'https://pic1.imgdb.cn/item/688b193958cb8da5c8f46e6a.jpg';
+
+            // 【【【核心修正】】】 直接检查 data.avatar_url
+            if (data.avatar_url === DEFAULT_AVATAR) {
+                // 如果用户还在使用默认头像，引导他去选择
+                const afterLoginAvatarSelect = async (selectedUrl) => {
+                    try {
+                        avatarModalMessage.textContent = '正在保存...';
+                        const updateResponse = await fetch(`${API_BASE_URL}/api/user/avatar`, {
+                            method: 'POST',
+                            headers: getAuthHeaders(),
+                            body: JSON.stringify({ avatar_url: selectedUrl })
+                        });
+
+                        if (updateResponse.ok) {
+                            const updateData = await updateResponse.json();
+                            localStorage.setItem('spaceAvatarUrl', updateData.new_avatar_url);
+                            
+                            avatarModalMessage.textContent = '设置成功！';
+                            setTimeout(() => {
+                                closeAvatarPicker();
+                                checkLoginStatus(); // 重新检查登录状态以进入主界面
+                            }, 1500);
+                        } else {
+                            throw new Error('更新头像失败');
+                        }
+                    } catch (e) {
+                        avatarModalMessage.textContent = `发生错误: ${e.message}`;
+                    }
+                };
+
+                // 【【【核心修正】】】 直接使用 data.username
+                showAvatarPicker(
+                    `欢迎你, ${data.username}!`,
+                    "选择一个喜欢的头像开始吧！",
+                    afterLoginAvatarSelect
+                );
+
+            } else {
+                // 如果不是新用户，直接进入主界面
+                checkLoginStatus();
+            }
+
+        } else {
+            errorEl.textContent = data.message || '登录失败';
+        }
+    } catch (error) {
+        console.error('登录时发生网络错误:', error);
+        errorEl.textContent = '网络错误，请稍后重试。';
     }
 }
 
 
+
+
 // 注册逻辑基本不变，只是URL变了
 // 【【【第一处修改：彻底重写注册函数】】】
+// =======================================================
+// ==      【【【核心修正】】】重写 handleRegister 函数       ==
+// =======================================================
+// =======================================================
+// ==      【【【核心修正】】】增加调试代码的版本          ==
+// =======================================================
+// =======================================================
+// ==      【【【最终解决方案】】】注册后引导登录流程       ==
+// =======================================================
 async function handleRegister(event) {
     event.preventDefault();
-    const username = document.getElementById('register-username').value;
-    const password = document.getElementById('register-password').value;
+    const usernameInput = document.getElementById('register-username');
+    const passwordInput = document.getElementById('register-password');
+    const errorEl = document.getElementById('register-error');
     
-    // 我们可以在这里加一个简单的错误提示元素
-    // const errorEl = document.getElementById('register-error');
+    const username = usernameInput.value;
+    const password = passwordInput.value;
+    errorEl.textContent = ''; // 清空错误信息
 
     try {
         const response = await fetch(`${API_BASE_URL}/api/register`, {
@@ -188,53 +261,39 @@ async function handleRegister(event) {
         const data = await response.json();
 
         if (response.ok) {
-            // 注册成功了！
-            const newUser = data.user;
-
-            // 1. 定义一个注册成功后选择头像的回调函数
-            const afterRegisterAvatarSelect = async (selectedUrl) => {
-                avatarModalMessage.textContent = 'Saving your choice...';
-                // 2. 调用后端API更新头像
-                const updateResponse = await fetch(`${API_BASE_URL}/api/user/avatar`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        username: newUser.username, // 传递用户名，因为此时没token
-                        avatar_url: selectedUrl
-                    })
-                });
-
-                if (updateResponse.ok) {
-                    avatarModalMessage.textContent = 'Great! Now you can log in.';
-                    // 3. 延迟2秒后关闭弹窗并切换到登录表单
-                    setTimeout(() => {
-                        closeAvatarPicker();
-                        // 触发“显示登录表单”的链接点击事件
-                        showLoginLink.click();
-                    }, 2000);
-                } else {
-                    const errorData = await updateResponse.json();
-                    avatarModalMessage.textContent = `Error: ${errorData.error}`;
-                }
-            };
+            // 注册成功！后端没有返回token，所以我们引导用户去登录
             
-            // 4. 调用我们通用的头像选择器
-            showAvatarPicker(
-                "Here we go!",
-                "Choose an avatar and log in!",
-                afterRegisterAvatarSelect
-            );
+            // 1. 在注册表单下方显示一个成功的消息
+            errorEl.textContent = '注册成功！请使用刚才的账号登录。';
+            errorEl.style.color = 'var(--accent-blue)'; // 用醒目的颜色显示成功消息
+
+            // 2. 清空注册表单的密码框
+            passwordInput.value = '';
+
+            // 3. 延迟2秒后，自动切换回登录表单
+            setTimeout(() => {
+                // a. 触发“显示登录表单”的链接的点击事件
+                document.getElementById('show-login').click(); 
+                
+                // b. 自动将刚才注册的用户名填入登录框，方便用户
+                document.getElementById('login-username').value = username;
+                document.getElementById('login-password').focus(); // 光标聚焦到密码框
+                
+                // c. 清理注册表单的成功消息
+                errorEl.textContent = '';
+                errorEl.style.color = ''; // 恢复默认颜色
+            }, 2000);
 
         } else {
-            // 用 alert 或 errorEl 显示错误信息
-            alert(`Registration failed: ${data.message}`);
-            // errorEl.textContent = data.message || '注册失败';
+            // 如果注册失败（比如用户名已存在），显示后端返回的错误信息
+            errorEl.textContent = data.message || '注册失败，请重试。';
         }
     } catch (error) {
-        alert('A network error occurred.');
-        // errorEl.textContent = '发生网络错误';
+        console.error('注册时发生网络错误:', error);
+        errorEl.textContent = '网络错误，请稍后重试。';
     }
 }
+
 
 
 function handleLogout() {
@@ -787,19 +846,30 @@ commentForm.addEventListener('submit', handleCommentSubmit);
 commentsList.addEventListener('click', handleLikeClick);
 
 // --- 初始化逻辑 ---
+// 找到 checkLoginStatus 函数并用这个版本替换
 function checkLoginStatus() {
     const token = localStorage.getItem('spaceToken');
     const username = localStorage.getItem('spaceUsername');
     const userId = localStorage.getItem('spaceUserId');
+    const avatarUrl = localStorage.getItem('spaceAvatarUrl'); // 获取头像
+
     if (token && username && userId) {
         currentUsername = username;
         currentUserId = parseInt(userId, 10);
-        currentUsernameDisplay.textContent = ` Hi! ${currentUsername}`;
+        
+        // 更新主菜单顶部的显示
+        // 假设用户名span前有一个img标签用于显示头像
+        currentUsernameDisplay.innerHTML = `
+            <img src="${avatarUrl}" class="avatar small-avatar">
+            <span>${currentUsername}</span>
+        `;
+        
         switchView('main-view');
     } else {
         switchView('auth-view');
     }
 }
+
 
 checkLoginStatus(); // 页面加载时立即执行
 
