@@ -260,29 +260,35 @@ async function showPlazaView() {
 }
 
 // 【【【第六处修改：让Plaza帖子列表显示头像】】】
+// 修改 renderPlazaTopics 以支持动画延迟
 function renderPlazaTopics(topics) {
     plazaTopicsList.innerHTML = '';
     if (topics.length === 0) { /* ... */ return; }
 
-    topics.forEach(topic => {
+    topics.forEach((topic, index) => {
         const topicCard = document.createElement('div');
         topicCard.className = 'topic-card';
         topicCard.dataset.topicId = topic.id;
-        // 【更新HTML结构】
         topicCard.innerHTML = `
             <div class="topic-header">
                  <img src="${topic.author_avatar_url}" alt="${topic.author_username}" class="avatar">
                  <h3>${topic.title}</h3>
             </div>
-            <p>${topic.content.substring(0, 100)}...</p> <!-- 截断内容以防过长 -->
+            <p>${topic.content.substring(0, 100)}...</p>
             <div class="topic-meta">
                 <span>By: ${topic.author_username}</span> | 
                 <span>${new Date(topic.created_at).toLocaleString()}</span>
             </div>
         `;
+        
+        // 【【【核心修改】】】
+        // 设置动画延迟，每个卡片比前一个晚出现 40 毫秒
+        topicCard.style.animationDelay = `${index * 40}ms`;
+
         plazaTopicsList.appendChild(topicCard);
     });
 }
+
 
 
 async function handlePublishTopic(event) {
@@ -788,7 +794,7 @@ function checkLoginStatus() {
     if (token && username && userId) {
         currentUsername = username;
         currentUserId = parseInt(userId, 10);
-        currentUsernameDisplay.textContent = `你好, ${currentUsername}`;
+        currentUsernameDisplay.textContent = ` Hi! ${currentUsername}`;
         switchView('main-view');
     } else {
         switchView('auth-view');
