@@ -129,21 +129,29 @@
     <!-- 【重要】弹窗必须在手机外壳的外面，以实现全局覆盖效果 -->
 
     <!-- 发布帖子的弹窗 -->
-    <div id="publish-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h3>发布新话题</h3>
-            <form id="publish-form">
-                <input type="text" id="publish-title" placeholder="帖子标题" required>
-                <textarea id="publish-content" placeholder="分享你的想法..." rows="6" required></textarea>
-                <input type="text" id="publish-image-url" placeholder="图片链接 (可选)">
-                <div class="modal-actions">
-                    <button type="button" id="cancel-publish-btn">取消</button>
-                    <button type="submit">Go</button>
-                </div>
-                <p id="publish-error" class="error-message"></p>
-            </form>
-        </div>
+<div id="publish-modal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Publish new</h3>
+      <form id="publish-form">
+    <input type="text" id="publish-title" placeholder="帖子标题" required>
+    
+    <div class="textarea-toolbar">
+        <button type="button" id="add-image-to-content-btn">添加图片</button>
     </div>
+    
+    <textarea id="publish-content" placeholder="输入帖子内容..." rows="10" required></textarea>
+    
+    <!-- 【【【新增】】】这个 div 是用来放动态生成的 URL 输入框的 -->
+    <div id="image-url-input-container"></div>
+    
+    <div class="modal-actions">
+        <button type="button" id="cancel-publish-btn">取消</button>
+        <button type="submit">发布</button> 
+    </div>
+    <p id="publish-error" class="error-message"></p>
+</form>
+    </div>
+</div>
 
     <!-- 头像选择弹窗 -->
     <div id="avatar-modal" class="modal-overlay">
