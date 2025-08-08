@@ -876,3 +876,60 @@ body {
     justify-content: center;
     align-items: center;
 }
+  /* style.css */
+
+.topic-image {
+    max-width: 100%; /* 图片最宽不会超过父容器 */
+    height: auto;    /* 高度自动缩放，防止图片变形 */
+    border-radius: 8px; /* 给图片加个圆角，更好看 */
+    margin-top: 15px;   /* 和上面的文字内容留出一些间距 */
+    margin-bottom: 15px;/* 和下面的元信息留出一些间距 */
+}
+/* style.css */
+.textarea-toolbar {
+    margin-bottom: 5px;
+}
+
+.textarea-toolbar button {
+    padding: 5px 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+}
+  /* style.css */
+.topic-body {
+    line-height: 1.6; /* 增加行高，让长文更易读 */
+    word-wrap: break-word; /* 确保长单词或链接能正常换行 */
+}
+  /* style.css */
+
+#topic-detail-view {
+  /* 【关键】允许垂直方向滚动 */
+  overflow-y: auto; 
+  
+  /* 【辅助】确保它能填满整个屏幕的高度 */
+  height: 100%;
+}
+/* style.css */
+
+.topic-card-image-preview {
+  width: 100%; /* 宽度依然撑满卡片 */
+  
+  /* 【【【核心修改】】】 */
+  /* 删除原来的 height: 160px; */
+  /* 换成下面这一行 */
+  aspect-ratio: 1 / 1; /* 定义宽高比为 1:1，也就是正方形 */
+
+  /* 下面的属性保持不变 */
+  object-fit: cover; /* 继续使用 cover 模式来裁剪图片 */
+  display: block;
+  margin: 10px 0;
+}
+
+.topic-card-text-preview {
+  /* 这是为没有图片的文字预览准备的样式，可以保持一致性 */
+  padding: 10px;
+  font-size: 0.9em;
+  color: #666;
+}
