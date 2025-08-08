@@ -52,10 +52,22 @@ const chatPartnerName = document.getElementById('chat-partner-name');
 const chatMessagesContainer = document.getElementById('chat-messages-container');
 const chatMessageForm = document.getElementById('chat-message-form');
 const chatMessageInput = document.getElementById('chat-message-input');
-
+const addImageToContentBtn = document.getElementById('add-image-to-content-btn');
 // --- 核心辅助函数 (非常重要) ---
 
 // 获取认证头
+function stripHtml(html) {
+   // 创建一个临时的 div 元素
+   const tempDivElement = document.createElement("div");
+   // 将 HTML 字符串赋值给它的 innerHTML，浏览器会自动解析
+   tempDivElement.innerHTML = html;
+   // 返回这个 div 的纯文本内容
+   return tempDivElement.textContent || tempDivElement.innerText || "";
+}
+function getFirstImageUrl(htmlString) {
+  const match = htmlString.match(/<img[^>]+src="([^">]+)"/);
+  return match ? match[1] : null;
+}
 function getAuthHeaders() {
     const token = localStorage.getItem('spaceToken');
     if (!token) return { 'Content-Type': 'application/json' };
@@ -322,46 +334,72 @@ async function showPlazaView() {
 // 修改 renderPlazaTopics 以支持动画延迟
 function renderPlazaTopics(topics) {
     plazaTopicsList.innerHTML = '';
-    if (topics.length === 0) { /* ... */ return; }
+    if (!topics || topics.length === 0) {
+        plazaTopicsList.innerHTML = '<p>广场上还没有任何帖子，快来发布第一条吧！</p>';
+        return;
+    }
 
     topics.forEach((topic, index) => {
         const topicCard = document.createElement('div');
         topicCard.className = 'topic-card';
         topicCard.dataset.topicId = topic.id;
+
+        let contentPreviewHtml = '';
+
+        // 尝试从 content 中提取第一张图片
+        const firstImageUrl = getFirstImageUrl(topic.content);
+
+        if (firstImageUrl) {
+            // 【情况A：处理新帖子-有图】
+            // 如果找到了 HTML 的 <img> 标签，就创建图片预览
+            contentPreviewHtml = `<img src="${firstImageUrl}" alt="Topic Preview" class="topic-card-image-preview">`;
+        } else {
+            // 【情况B：处理所有无图帖子，包括旧帖子】
+            
+            // 1. 先假设 content 可能是 HTML，用 stripHtml 清理一下
+            let textToDisplay = stripHtml(topic.content);
+            
+            // 2. 如果清理后是空字符串（可能 content 就是 "<img>" 但 src 是空的），
+            //    就直接用原始的 content，以防万一。
+            if (!textToDisplay) {
+                textToDisplay = topic.content;
+            }
+
+            // 3. 对最终得到的文本进行截取
+            const previewText = textToDisplay.substring(0, 80);
+            contentPreviewHtml = `<p class="topic-card-text-preview">${previewText}...</p>`;
+        }
+
         topicCard.innerHTML = `
             <div class="topic-header">
                  <img src="${topic.author_avatar_url}" alt="${topic.author_username}" class="avatar">
                  <h3>${topic.title}</h3>
             </div>
-            <p>${topic.content.substring(0, 100)}...</p>
+            ${contentPreviewHtml}
             <div class="topic-meta">
                 <span>By: ${topic.author_username}</span> | 
                 <span>${new Date(topic.created_at).toLocaleString()}</span>
             </div>
         `;
         
-        // 【【【核心修改】】】
-        // 设置动画延迟，每个卡片比前一个晚出现 40 毫秒
         topicCard.style.animationDelay = `${index * 40}ms`;
-
         plazaTopicsList.appendChild(topicCard);
     });
 }
 
 
-
 async function handlePublishTopic(event) {
     event.preventDefault();
     const title = document.getElementById('publish-title').value;
+    // 直接从 textarea 获取包含 Markdown 的全部内容
     const content = document.getElementById('publish-content').value;
-    const imageUrl = document.getElementById('publish-image-url').value;
     
-    // 【【【修改】】】
-    // 发布需要认证！
+
     const response = await fetch(`${API_BASE_URL}/api/plaza/topics`, {
         method: 'POST',
-        headers: getAuthHeaders(), // 使用辅助函数获取认证头
-        body: JSON.stringify({ title, content, image_url: imageUrl })
+        headers: getAuthHeaders(),
+        // 只发送 title 和 content
+        body: JSON.stringify({ title, content })
     });
 
     if (response.ok) {
@@ -373,7 +411,6 @@ async function handlePublishTopic(event) {
         alert(`发布失败: ${data.error || data.message}`);
     }
 }
-
 // --- 帖子详情、评论、点赞函数 (全新) ---
 
 async function showTopicDetailView(topicId) {
@@ -400,16 +437,29 @@ async function showTopicDetailView(topicId) {
     }
 }
 
+// --- 【请用这个版本替换你的 renderTopicDetail 函数】 ---
 function renderTopicDetail(topic) {
+    console.log("即将渲染的内容是:", topic.content);
     topicDetailContent.innerHTML = `
         <h2>${topic.title}</h2>
-        <p>${topic.content}</p>
+        
+        <!-- 【核心】这里直接渲染后端传来的 HTML 内容 -->
+        <div class="topic-body">${topic.content}</div>
+        
         <div class="topic-meta">
             <span>发布者: ${topic.author_username}</span> | 
             <span>${new Date(topic.created_at).toLocaleString()}</span>
         </div>
     `;
+
+    // 【可选但推荐】为了让新渲染的图片样式生效，
+    // 我们需要确保 .topic-body 里的图片也应用 .topic-image 样式
+    const images = topicDetailContent.querySelectorAll('.topic-body img');
+    images.forEach(img => {
+        img.classList.add('topic-image'); // 复用你之前写的图片样式
+    });
 }
+
 
 // 【【【第七处修改：让评论区显示头像】】】
 function renderComments(comments) {
@@ -841,7 +891,82 @@ plazaTopicsList.addEventListener('click', (event) => {
 showPublishModalBtn.addEventListener('click', () => publishModal.classList.add('active'));
 cancelPublishBtn.addEventListener('click', () => publishModal.classList.remove('active'));
 publishForm.addEventListener('submit', handlePublishTopic);
+if (addImageToContentBtn) {
+    addImageToContentBtn.addEventListener('click', () => {
+        const container = document.getElementById('image-url-input-container');
+        const contentTextarea = document.getElementById('publish-content');
 
+        // 如果输入框已存在，则不重复创建
+        if (document.getElementById('temp-image-input-wrapper')) {
+            return;
+        }
+
+        // --- 在你的 JS 文件中，找到并用下面这段代码替换旧的 addImageToContentBtn 监听器 ---
+
+// 确保你已经获取了按钮
+const addImageToContentBtn = document.getElementById('add-image-to-content-btn');
+
+addImageToContentBtn.addEventListener('click', () => {
+    const container = document.getElementById('image-url-input-container');
+    const contentTextarea = document.getElementById('publish-content');
+
+    // 如果输入框已经存在，就不再创建，防止重复点击
+    if (document.getElementById('temp-image-input-wrapper')) {
+        return;
+    }
+
+    // 1. 创建一个包裹所有新元素的 div
+    const wrapper = document.createElement('div');
+    wrapper.id = 'temp-image-input-wrapper'; // 给它一个ID方便管理
+    wrapper.style.marginTop = '10px'; // 加一点上边距
+
+    // 2. 创建 URL 输入框
+    const input = document.createElement('input');
+    input.type = 'url';
+    input.placeholder = '请在此处粘贴图片URL';
+    input.style.width = '70%'; // 调整宽度
+    input.style.marginRight = '10px'; // 和按钮留点距离
+
+    // 3. 创建“确认”按钮
+    const confirmBtn = document.createElement('button');
+    confirmBtn.type = 'button';
+    confirmBtn.textContent = '确认';
+    confirmBtn.onclick = () => {
+        if (input.value) {
+            const markdownImage = `\n\n![Image](${input.value})\n\n`;
+            contentTextarea.value += markdownImage;
+        }
+        // 不论是否输入，都移除这个临时输入框
+        container.innerHTML = ''; 
+    };
+
+    // 4. 创建“取消”按钮
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.textContent = '取消';
+    cancelBtn.style.marginLeft = '5px';
+    cancelBtn.onclick = () => {
+        // 直接移除这个临时输入框
+        container.innerHTML = '';
+    };
+
+    // 5. 把输入框和按钮都放进包裹的 div 中
+    wrapper.appendChild(input);
+    wrapper.appendChild(confirmBtn);
+    wrapper.appendChild(cancelBtn);
+
+    // 6. 最后，把这个包裹 div 添加到我们预设的容器里
+    container.appendChild(wrapper);
+
+    // 7. 让光标自动聚焦到新的输入框，方便用户直接粘贴
+    input.focus();
+});
+
+    });
+} else {
+    // 如果按钮没有找到，这会在控制台给你一个清晰的提示
+    console.error("错误：无法找到 ID 为 'add-image-to-content-btn' 的按钮。请检查 HTML 的 ID 是否正确。");
+}
 commentForm.addEventListener('submit', handleCommentSubmit);
 commentsList.addEventListener('click', handleLikeClick);
 
